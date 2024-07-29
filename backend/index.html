@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Database Tables</title>
+    <style>
+        table {
+            border-collapse: collapse;
+            width: 100%;
+        }
+        th, td {
+            border: 1px solid black;
+            padding: 8px;
+            text-align: left;
+        }
+        th {
+            background-color: #f2f2f2;
+        }
+        .error {
+            color: red;
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+    <h1>Database Tables</h1>
+    <div id="tableButtons"></div>
+    <div id="tableContent"></div>
+
+    <script>
+        // Fetch table names and create buttons
+        fetch('/tables')
+            .then(response => response.json())
+            .then(tables => {
+                const buttonContainer = document.getElementById('tableButtons');
+                tables.forEach(table => {
+                    const button = document.createElement('button');
+                    button.textContent = table;
+                    button.onclick = () => fetchTableContent(table);
+                    buttonContainer.appendChild(button);
+                });
+            })
+            .catch(error => {
+                console.error('Error fetching tables:', error);
+                document.getElementById('tableButtons').innerHTML = '<p class="error">Error fetching tables</p>';
+            });
+
+        function fetchTableContent(tableName) {
+            fetch(`/tables/${tableName}`)
+                .then(response => response.json())
+                .then(data => {
+                    console.log('Received data:', data);  // Log the received data
+                    displayTableContent(tableName, data.allData);
+                })
+                .catch(error => {
+                    console.error(`Error fetching content for ${tableName}:`, error);
+                    document.getElementById('tableContent').innerHTML = `
+                        <p class="error">Error fetching content for ${tableName}</p>
+                        <p>Details: ${error.message || 'Unknown error'}</p>
+                    `;
+                });
+        }
+
+        function displayTableContent(tableName, data) {
+            const contentContainer = document.getElementById('tableContent');
+            if (!data || data.length === 0) {
+                contentContainer.innerHTML = `<p>No data available for ${tableName}</p>`;
+                return;
+            }
+
+            const columns = Object.keys(data[0]);
+
+            contentContainer.innerHTML = `
+                <h2>${tableName}</h2>
+                <table>
+                    <tr>${columns.map(col => `<th>${col}</th>`).join('')}</tr>
+                    ${data.map(row => `
+                        <tr>${columns.map(col => `<td>${formatCell(tableName, col, row[col], row.id)}</td>`).join('')}</tr>
+                    `).join('')}
+                </table>
+            `;
+        }
+        
+
+        function formatCell(tableName, column, value, rowId) {
+            if (value === null) return 'NULL';
+            if (tableName === 'candidates' && column === 'resume' && value !== null) {
+                return `<a href="/view-resume/${rowId}" target="_blank">View Resume</a>`;
+            }
+            if (column === 'application_date' && value) {
+                const date = new Date(value);
+                return date.toLocaleString();
+            }
+            return value;
+        }
+    </script>
+    <h2>Add New Job</h2>
+    <form id="addJobForm">
+        <label for="title">Title:</label>
+        <input type="text" id="title" name="title" required><br><br>
+    
+        <label for="location">Location:</label>
+        <input type="text" id="location" name="location" required><br><br>
+    
+        <label for="sector">Sector:</label>
+        <input type="text" id="sector" name="sector" required><br><br>
+    
+        <label for="date">Date:</label>
+        <input type="date" id="date" name="date" required><br><br>
+    
+        <label for="description">Description:</label>
+        <textarea id="description" name="description" required></textarea><br><br>
+    
+        <label for="experience">Experience:</label>
+        <textarea id="experience" name="experience" required></textarea><br><br>
+    
+        <label for="details">Details:</label>
+        <textarea id="details" name="details" required></textarea><br><br>
+    
+        <button type="submit">Add Job</button>
+    </form>
+    
+    <script>
+        document.getElementById('addJobForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            const formData = new FormData(this);
+            const jobData = Object.fromEntries(formData.entries());
+    
+            fetch('/jobs', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify(jobData),
+            })
+            .then(response => response.json())
+            .then(data => {
+                alert(data.message);
+                // Optionally, you can refresh the job list here
+            })
+            .catch((error) => {
+                console.error('Error:', error);
+                alert('An error occurred while adding the job.');
+            });
+        });
+    </script>
+</body>
+</html>
