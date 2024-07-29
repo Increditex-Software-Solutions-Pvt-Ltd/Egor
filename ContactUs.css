@@ -1,0 +1,17 @@
+#contact {
+    
+    background-size: cover; /* Ensures the image covers the entire section */
+    background-position: center; /* Centers the image */
+    background-repeat: no-repeat; /* Prevents the image from repeating */
+    padding: 175px; /* Adds some padding to the section */
+    color: white; /* Sets text color to white for better contrast */
+    text-align: center; /* Centers the text */
+}
+
+#contact h2 {
+    margin-bottom: 20px;
+}
+
+#contact p {
+    margin: 10px 0;
+}
